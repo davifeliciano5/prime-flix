@@ -1,12 +1,33 @@
 import { useEffect,useState } from "react";
-import {useParams} from 'react-router-dom'
+import {useParams, useNavigate} from 'react-router-dom'
 import api from '../../services/api'
+import './filme-info.css'
+import {toast} from 'react-toastify'
+
 ///movie/550?api_key=27624f879d253187eea297046959b50f
 
 function Filme() {
     const {id} = useParams();
+    const navigation = useNavigate();
+
     const [filme,setFilme] = useState({});
     const [loading,setLoading] = useState(true);
+
+    function salvarFilme(){
+       const minhalista = localStorage.getItem("@filme");
+
+       let filmesSalvos = JSON.parse(minhalista) || [];
+
+       const hasFilmne = filmesSalvos.some((fs)=>fs.id === filme.id);
+
+       if(hasFilmne){
+        toast.warn("Esse filme já está na sua lista!");
+        return
+        }
+        filmesSalvos.push(filme);
+        localStorage.setItem("@filme",JSON.stringify(filmesSalvos));
+        toast.success("Filme salvo com sucesso")
+    }
 
     useEffect(()=>{
         async function loadFilme() {
@@ -21,7 +42,9 @@ function Filme() {
                 setLoading(false);
             })
             .catch(()=>{
-
+                navigation("/",{ replace:true }
+                ) 
+                return
             })
         }
         loadFilme();
@@ -29,7 +52,7 @@ function Filme() {
         return ()=>{
 
         }
-    },[])
+    },[navigation,id])
     if (loading){
         return(
             <div>
@@ -46,8 +69,12 @@ function Filme() {
             
              <h3>Sinopse</h3>
             <span>{filme.overview}</span> 
-
             <strong>Avaliação: {filme.vote_average}/10</strong>
+        
+            <div className="area-buttons">
+                <button onClick={salvarFilme} >Salvar</button>
+                <a target="blank" rel="external" href={`https://youtube.com/results?search_query=${filme.title} Trailer`}>Trailer</a>
+            </div>
         </div>
     )
 }
